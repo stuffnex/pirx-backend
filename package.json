@@ -1,0 +1,22 @@
+{
+  "name": "pirx-radar-backend",
+  "version": "1.0.0",
+  "description": "PIRX iCAS2 ADS-B Radar Backend — Beast → WebSocket → Browser",
+  "main": "server.js",
+  "scripts": {
+    "start":  "node server.js",
+    "dev":    "DEBUG=1 node server.js",
+    "pm2":    "pm2 start server.js --name pirx-backend --restart-delay 3000 --max-memory-restart 128M",
+    "pm2:logs": "pm2 logs pirx-backend"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws":      "^8.16.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["adsb", "beast", "radar", "pirx", "flightradar24", "raspberrypi"],
+  "author": "PIRX",
+  "license": "MIT"
+}
