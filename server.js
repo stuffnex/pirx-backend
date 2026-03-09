@@ -257,12 +257,18 @@ function buildMockTracks() {
 
 const AUDIO_DRIVERS = {
 
-  // rtl_fm → sox MP3 encoder pipeline
+// rtl_fm → ffmpeg MP3 encoder pipeline
+  // -M am   : AM demodulation — required for VHF aeronautical voice (118–137 MHz)
+  // -s 12k  : 12 kHz sample rate — sufficient for AM voice, low CPU
+  // -d 1    : RTL-SDR device index 1 — leaves device 0 free for Beast/fr24feed
+  // ffmpeg  : replaces sox (not installed); outputs 32 kbps mono MP3
   rtl_fm: (freqHz) => ({
     cmd:  'sh',
     args: ['-c',
-      `rtl_fm -f ${freqHz} -M fm -s 200k -r 48000 -g ${CONFIG.RTL_GAIN} -d ${CONFIG.RTL_DEVICE} - ` +
-      `| sox -t raw -r 48000 -e signed -b 16 -c 1 - -t mp3 -C 5 -`
+      `rtl_fm -f ${freqHz} -M am -s 12k -g ${CONFIG.RTL_GAIN} -d 1 - ` +
+      `| ffmpeg -hide_banner -loglevel error ` +
+      `-f s16le -ar 12000 -ac 1 -i pipe:0 ` +
+      `-codec:a libmp3lame -b:a 32k -f mp3 pipe:1`
     ],
   }),
 
