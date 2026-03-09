@@ -5,6 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.1] — 2026-03-09
+
+### Fixed
+- `app.get('*')` catch-all SPA fallback was intercepting API routes (`/audio/freqs`, `/audio/stream`, `/health`, `/status`) and returning `index.html` instead of JSON — added `API_PATHS` regex guard so the catch-all only applies to non-API paths
+
+---
+
 ## [1.1.0] — 2026-03-06
 
 ### Added — Audio Streaming (Milestone 2)

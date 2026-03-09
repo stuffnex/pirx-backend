@@ -533,9 +533,15 @@ app.get('/audio/stream', (req, res) => {
 });
 
 // ── Static frontend ─────────────────────────────────────────────────────────
+// API paths must never be intercepted by the catch-all SPA fallback
+const API_PATHS = /^\/(health|status|audio)\b/;
+
 if (fs.existsSync(CONFIG.STATIC_DIR)) {
   app.use(express.static(CONFIG.STATIC_DIR));
   app.get('*', (req, res) => {
+    if (API_PATHS.test(req.path)) {
+      return res.status(404).json({ error: `API route ${req.path} not found` });
+    }
     const index = path.join(CONFIG.STATIC_DIR, 'index.html');
     fs.existsSync(index)
       ? res.sendFile(index)

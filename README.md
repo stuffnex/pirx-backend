@@ -100,24 +100,45 @@ curl http://localhost:8080/status
 
 ### 3 — WebSocket live tracks
 
+Install `wscat` once:
 ```bash
-# Install wscat if needed:
 sudo npm install -g wscat
-
-wscat -c ws://localhost:8080/ws/traffic
-# Expected: immediate JSON push → {"type":"tracks","tracks":[...],"source":"live","ts":...}
-# New message every ~100 ms while connected
-# Press Ctrl+C to exit
 ```
+
+Connect to the traffic stream:
+```bash
+wscat -c ws://localhost:8080/ws/traffic
+```
+
+You will see a JSON message arrive immediately (the current snapshot), then a new one every ~100 ms:
+```
+Connected (press CTRL+C to quit)
+< {"type":"tracks","tracks":[{"icao":"3C6444","callsign":"DLH123","lat":49.52,...}],"source":"live","ts":1700000000000}
+< {"type":"tracks","tracks":[...],"source":"live","ts":1700000001000}
+```
+
+If `"source":"mock"` appears instead of `"live"`, Beast is not connected — this is expected when fr24feed is down.
+
+Press `Ctrl+C` to disconnect.
 
 ### 4 — WebSocket frequency request
 
+Connect with wscat, then type the JSON message and press Enter to send it:
 ```bash
 wscat -c ws://localhost:8080/ws/traffic
-# After connecting, type and send:
-{"type":"get_freqs"}
-# Expected: {"type":"freqs","freqs":{"APP":119475,"TWR":118305,"GND":121760,...}}
 ```
+
+Once connected, type this exactly and press Enter:
+```
+{"type":"get_freqs"}
+```
+
+Expected response on the next line:
+```
+< {"type":"freqs","freqs":{"APP":119475,"TWR":118305,"GND":121760,"DEL":121760,"CTR":129525,"ATIS":123080}}
+```
+
+wscat shows `>` for messages you send and `<` for messages the server sends back.
 
 ### 5 — Audio frequency list
 
