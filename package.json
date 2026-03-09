@@ -1,13 +1,19 @@
 {
   "name": "pirx-radar-backend",
-  "version": "1.0.0",
-  "description": "PIRX iCAS2 ADS-B Radar Backend — Beast → WebSocket → Browser",
+  "version": "1.1.0",
+  "description": "PIRX iCAS2 ADS-B Radar Backend — Beast → WebSocket → Browser + VHF Audio Streaming",
   "main": "server.js",
   "scripts": {
-    "start":  "node server.js",
-    "dev":    "DEBUG=1 node server.js",
-    "pm2":    "pm2 start server.js --name pirx-backend --restart-delay 3000 --max-memory-restart 128M",
-    "pm2:logs": "pm2 logs pirx-backend"
+    "start":      "node server.js",
+    "dev":        "DEBUG=1 node server.js",
+    "dev:mock":   "DEBUG=1 AUDIO_SOURCE=mock node server.js",
+    "dev:alsa":   "DEBUG=1 AUDIO_SOURCE=alsa node server.js",
+    "pm2":        "pm2 start server.js --name pirx-backend --restart-delay 3000 --max-memory-restart 128M",
+    "pm2:mock":   "AUDIO_SOURCE=mock pm2 start server.js --name pirx-backend --restart-delay 3000 --max-memory-restart 128M",
+    "pm2:logs":   "pm2 logs pirx-backend",
+    "check:sox":  "which sox && sox --version || echo 'sox not found — sudo apt install sox'",
+    "check:rtl":  "which rtl_fm && rtl_fm --help 2>&1 | head -1 || echo 'rtl_fm not found — sudo apt install rtl-sdr'",
+    "check:alsa": "which arecord && arecord --version || echo 'arecord not found — sudo apt install alsa-utils'"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -16,7 +22,7 @@
   "engines": {
     "node": ">=16.0.0"
   },
-  "keywords": ["adsb", "beast", "radar", "pirx", "flightradar24", "raspberrypi"],
+  "keywords": ["adsb", "beast", "radar", "pirx", "flightradar24", "raspberrypi", "rtl-sdr", "audio", "atc", "vhf"],
   "author": "PIRX",
   "license": "MIT"
 }
