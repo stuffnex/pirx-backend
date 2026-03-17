@@ -1,6 +1,6 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
- * ║        PIRX RADAR BACKEND — iCAS2 ADS-B + Audio Server          ║
+ * ║      PIRX RADAR BACKEND v1.2.0 — iCAS2 ADS-B + Audio + FFT      ║
  * ║  Beast (fr24feed :30005) → WebSocket JSON → Browser             ║
  * ║  RTL-SDR (dongle 0) → ffmpeg MP3 → HTTP stream → Browser        ║
  * ║  Raspberry Pi 4  |  Two dongles  |  PM2 compatible              ║
@@ -659,7 +659,9 @@ app.get('/audio/fft', async (req, res) => {
   //   -1                 single sweep, then exit
   //   -               write CSV to stdout
   const rtlArgs = [
-    '-f', `${CONFIG.FFT_MIN_MHZ}M:${CONFIG.FFT_MAX_MHZ}M:25k`,
+    // FIX: use full Hz integers — the 'M'/'k' shorthand causes exit code 1
+    //      on some rtl_power builds (confirmed on this Pi)
+    '-f', `${Math.round(CONFIG.FFT_MIN_MHZ*1e6)}:${Math.round(CONFIG.FFT_MAX_MHZ*1e6)}:25000`,
     '-g', gainDb,
     '-d', String(CONFIG.RTL_DEVICE),
     '-1',        // single sweep
@@ -696,6 +698,13 @@ app.get('/audio/fft', async (req, res) => {
     if (code !== 0) {
       logger.warn(`FFT: rtl_power exited with code ${code}`);
       if (!res.headersSent) return res.status(500).json({ error: `rtl_power exited ${code}` });
+      return;
+    }
+
+    // Guard: ensure output exists before parsing — empty string causes SyntaxError
+    if (!rawOutput || rawOutput.trim().length === 0) {
+      logger.warn('FFT: rtl_power produced no output');
+      if (!res.headersSent) return res.status(500).json({ error: 'rtl_power produced no output' });
       return;
     }
 
@@ -753,6 +762,15 @@ app.get('/audio/fft', async (req, res) => {
 const API_PATHS = /^\/(health|status|audio)\b/;
 
 if (fs.existsSync(CONFIG.STATIC_DIR)) {
+  // Disable caching for JS/HTML/CSS so Cloudflare always fetches fresh files
+  app.use((req, res, next) => {
+    if (/\.(js|css|html)(\?.*)?$/.test(req.path)) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    next();
+  });
   app.use(express.static(CONFIG.STATIC_DIR));
   app.get('*', (req, res) => {
     if (API_PATHS.test(req.path)) {
